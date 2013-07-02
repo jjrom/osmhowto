@@ -59,25 +59,30 @@ We suppose that brew is up and running (see http://mxcl.github.io/homebrew/)
 		launchctl load ~/Library/LaunchAgents/homebrew.mxcl.elasticsearch.plist
 
 
-Retrieve full OSM data
-----------------------
+Retrieve OSM data
+-----------------
 
 		# Set OSM home directory
 		export OSM_HOME=/home/data/osm
 
-		# Download planet OSM
+		# Download OSM
         mkdir -p $OSM_HOME/extract
         mkdir -p $OSM_HOME/planet
         mkdir -p $OSM_HOME/output
-        wget -P $OSM_HOME/planet http://ftp.osuosl.org/pub/openstreetmap/pbf/planet-latest.osm.pbf
 
-       	# Index data within elasticsearch
-       	# Veeeery long so use nohup
-		nohup osmosis --read-pbf $OSM_HOME/planet/planet-latest.osm.pbf --write-elasticsearch cluster.hosts="localhost" 2>nohup_err.txt 1>/dev/null &
+        # Midi-Pyrénées - a good start
+        wget -P $OSM_HOME/extract http://download.geofabrik.de/europe/france/midi-pyrenees-latest.osm.pbf 
+        time osmosis --read-pbf $OSM_HOME/extract/midi-pyrenees-latest.osm.pbf --write-elasticsearch cluster.hosts="localhost"
+
+        # Full earth = veeeery long so use nohup
+        wget -P $OSM_HOME/planet http://ftp.osuosl.org/pub/openstreetmap/pbf/planet-latest.osm.pbf
+		time nohup osmosis --read-pbf $OSM_HOME/planet/planet-latest.osm.pbf --write-elasticsearch cluster.hosts="localhost" 2>nohup_err.txt 1>/dev/null &
 
 
 Test installation
 -----------------
+
+Search all chinese restaurants in Midi-Pyrénées
 
 		curl -XPOST http://localhost:9200/osm/_search?pretty=true -d '
 		{
@@ -94,7 +99,7 @@ Test installation
 		              "shape": {
 		                "shape": {
 		                  "type": "envelope",
-		                  "coordinates": [[-52.3467,4.9588],[-52.2744,4.8944]]
+		                  "coordinates": [[-0.327160,42.571651],[3.451500,45.046719]]
 		                }
 		              }
 		            }
@@ -104,7 +109,5 @@ Test installation
 		    }
 		  }
 		}'
-
-
 
     
